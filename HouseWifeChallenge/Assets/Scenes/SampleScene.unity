@@ -1043,9 +1043,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pixelRes: 64
+  speed: 0
   offset: 1
   borderOffset: 2
-  speed: 3
   worldMap: {fileID: 752550243}
 --- !u!20 &519420031
 Camera:
@@ -3060,6 +3060,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
+  worldMap: {fileID: 752550243}
 --- !u!50 &874314984
 Rigidbody2D:
   serializedVersion: 4
@@ -3103,8 +3104,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 932503040}
-  - component: {fileID: 932503039}
-  - component: {fileID: 932503041}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3112,18 +3111,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &932503039
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 932503038}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9276bede63fa96e4399be733bcc28503, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  worldMap: {fileID: 752550243}
 --- !u!4 &932503040
 Transform:
   m_ObjectHideFlags: 0
@@ -3137,15 +3124,3 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &932503041
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 932503038}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5a87bcbf4d9b713418955f71a34f2a1c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  grid: {fileID: 932503039}

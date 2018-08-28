@@ -1,67 +1,95 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
+using static Utils;
 
 public class PlayerController : MonoBehaviour {
 
-    public float speed;            
+    public float speed;
+    public Tilemap worldMap;
     private Rigidbody2D rb2d;
-    List<Vector2> pathToFollow;
-    Vector2 moveDirection = Vector2.zero;
+    Queue<Vector2> path; // --> change to Queue
+	Vector2 nextPathPosition;
+    Vector2 playerMove = Vector2.zero;
+	PathFindingManager pathFindingManager;
+	bool isFollowingPath;
+	
     void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
-        pathToFollow = null;
+        PathFindingGrid grid = gameObject.AddComponent<PathFindingGrid>();
+        grid.Init(worldMap);
+        pathFindingManager = gameObject.AddComponent<PathFindingManager>();
     }
 
-    private void Update()
+
+	// Called every frame
+    private void Update() 
     {
-        if (pathToFollow != null && pathToFollow.Count > 0)
-        {
-            // a simplifier !!!
-            Vector2 nextPosition = pathToFollow[0];
-            Vector2 movement = nextPosition - new Vector2(transform.position.x, transform.position.y);
-            float distance = Utils.GetNorm2(movement);
-            if (distance < speed * Time.deltaTime)
-            {
-                pathToFollow.Remove(nextPosition);
-                if (pathToFollow.Count == 0)
-                {
-                    pathToFollow = null;
-                    moveDirection = Vector2.zero;
-                }
-                else
-                {
-                    nextPosition = pathToFollow[0];
-                    movement = nextPosition - new Vector2(transform.position.x, transform.position.y);
-                    moveDirection = (nextPosition - new Vector2(transform.position.x, transform.position.y)).normalized;
-                }
-            }
-            else
-            {
-                moveDirection = (nextPosition - new Vector2(transform.position.x, transform.position.y)).normalized;
-            }
-        }
+		playerMove = Vector2.zero; // reset each time
+		
+		// Check Inputs
+		if (Input.GetMouseButtonDown(0))
+		{ 
+			Vector3 mousePositon = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+			Vector2 targetPos = new Vector2(mousePositon.x, mousePositon.y);
+			Vector2 startPos = new Vector2(transform.position.x, transform.position.y);
+            Queue<Node> nodePath = pathFindingManager.GetPathWithAStarAlgo(startPos, targetPos);
+            path = pathFindingManager.GetPathWithWorldPosition(nodePath);
+            StartFollowingPath();
+		}
+		
+		// A simplifier
+		if (isFollowingPath)
+		{
+			FollowPath();
+		}
     }
 
+	// Called every "physics" frame
     void FixedUpdate()
     {
-        rb2d.velocity = moveDirection.normalized * speed;
+        rb2d.velocity = playerMove.normalized * speed;
     }
-
-    public void SetPathToFollow(List<Node> path)
-    {
-        if (path == null)
-        {
-            pathToFollow = null;
-        }
-        else
-        {
-            pathToFollow = new List<Vector2>();
-            foreach (Node node in path)
-            {
-                pathToFollow.Add(node.worldPos);
-            }
-        }
-    }
+	
+	public void StartFollowingPath()
+	{
+		if (path != null && path.Count > 0)
+		{
+			isFollowingPath = true;
+			nextPathPosition = path.Dequeue();
+		}
+		else 
+		{
+			StopFollowingPath();
+		}
+	}
+	
+	public void StopFollowingPath()
+	{
+		isFollowingPath = false;
+		path = null;
+        nextPathPosition = new Vector2(transform.position.x, transform.position.y);
+	}
+	
+	public void FollowPath()
+	{
+        Vector2 currentPosition = new Vector2(transform.position.x, transform.position.y);
+        Vector2 movement = nextPathPosition - currentPosition;
+		if (GetNorm2(movement) < speed * Time.deltaTime)
+		{
+			if (path != null && path.Count != 0)
+			{
+				nextPathPosition = path.Dequeue();
+				movement = nextPathPosition - currentPosition;
+			}
+			else
+			{
+				movement = Vector2.zero;
+				StopFollowingPath();
+			}
+		}
+		playerMove = movement;
+	}
 }

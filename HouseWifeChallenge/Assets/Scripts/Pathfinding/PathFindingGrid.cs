@@ -3,46 +3,43 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using static Utils;
 
+// A intégrer dans le game manager ?
 public class PathFindingGrid : MonoBehaviour {
 
     public Tilemap worldMap; // tileMap defining the word size and grid size
-    int width;
-    int height;
-    Node[,] nodes;
-    Node[] finalPath;
-    float cellSize;
-    List<Node> path;
-    Texture2D wallTexture;
-    Texture2D groundTexture;
-    Texture2D pathTexture;
+    int Width => worldMap.size.x;
+    int Height => worldMap.size.y;
+    float CellSize => worldMap.cellSize.x;
+	Node[,] nodes;
+	
+	// textures for visual debug
+    static Texture2D wallTexture;
+    static Texture2D groundTexture;
+
     // Use this for initialization
     void Start() {
-        worldMap.CompressBounds();
-        width = worldMap.size.x;
-        height = worldMap.size.y;
-        cellSize = worldMap.cellSize.x;
-        Debug.Log(string.Format("Grid properties: width:{0}, height:{1}, cellsize: {2}", width, height, cellSize));
-        path = new List<Node>();
-        InitNodes();
-        ScanObstacles();
-        InitTextures();
-
-        // test
-        List<Node> test = GetNeighbours(nodes[2, 2]);
-        Debug.Log(string.Join(",", test.Select(x => x.ToString()).ToArray()));
-
-        Vector2 wordPosition = new Vector2(9, 5);
-        Node node = GetNodeFromWorldPosition(wordPosition);
-        Debug.Log(node.ToString());
+        Init(worldMap);
     }
 
+	public void Init(Tilemap worldMap)
+	{
+        this.worldMap = worldMap;
+        this.worldMap.CompressBounds();
+        Debug.Log(string.Format("Grid Initialized. Properties: width:{0}, height:{1}, cellsize: {2}", Width, Height, CellSize));
+        InitNodes();
+        InitTextures();
+		// not necessary at First
+		//ScanObstacles();
+	}
+	
     public void InitNodes()
     {
-        nodes = new Node[width, height];
-        for (int x = 0; x < width; x++)
+        nodes = new Node[Width, Height];
+        for (int x = 0; x < Width; x++)
         {
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < Height; y++)
             {
                 int gridX = worldMap.cellBounds.xMin + x;
                 int gridY = worldMap.cellBounds.yMin + y;
@@ -74,14 +71,14 @@ public class PathFindingGrid : MonoBehaviour {
             if (node != null)
             {
                 node.isWall = HasCollider(node.worldPos);
-                Debug.Log(string.Format("Wall detected at position ({0},{1}) ", node.worldPos.x, node.worldPos.y));
+                //Debug.Log(string.Format("Wall detected at position ({0},{1}) ", node.worldPos.x, node.worldPos.y));
             }
         }
     }
 
     public bool HasCollider(Vector2 pos)
     {
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(pos, cellSize / 4);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(pos, CellSize / 4);
         if (colliders.Length == 0)
         {
             return false;
@@ -101,12 +98,12 @@ public class PathFindingGrid : MonoBehaviour {
     public List<Node> GetNeighbours(Node node)
     {
         List<Node> neighbours = new List<Node>();
-        if (nodes != null)
+        if (node != null)
         {
             int xMin = Mathf.Max(node.gridX - 1, 0);
-            int xMax = Mathf.Min(node.gridX + 1, width - 1);
+            int xMax = Mathf.Min(node.gridX + 1, Width - 1);
             int yMin = Mathf.Max(node.gridY - 1, 0);
-            int yMax = Mathf.Min(node.gridY + 1, height - 1);
+            int yMax = Mathf.Min(node.gridY + 1, Height - 1);
 
             bool isTopWall = !CanWalkPosition(node.gridX, node.gridY + 1);
             bool isBottomWall = !CanWalkPosition(node.gridX, node.gridY - 1);
@@ -145,7 +142,7 @@ public class PathFindingGrid : MonoBehaviour {
 
     public bool CanWalkPosition(int x, int y)
     {
-        if (x < 0 || y < 0 || x > width - 1 || y > height - 1)
+        if (x < 0 || y < 0 || x > Width - 1 || y > Height - 1)
         {
             return false;
         }
@@ -157,8 +154,16 @@ public class PathFindingGrid : MonoBehaviour {
 
     public Node GetNodeFromWorldPosition(Vector2 position)
     {
-        Vector2Int nodePosition = GetNodePositionFromWorldPosition(position);
-        return nodes[nodePosition.x, nodePosition.y];
+        Vector2Int localPosition = GetNodePositionFromWorldPosition(position);
+		if (localPosition.x < 0 || localPosition.x > Width - 1 
+				|| localPosition.y < 0 || localPosition.y > Height - 1)
+		{
+            return null;
+		}
+		else
+		{
+			return nodes[localPosition.x, localPosition.y];
+		}
     }
 
     public Vector2Int GetNodePositionFromWorldPosition(Vector2 position)
@@ -166,75 +171,41 @@ public class PathFindingGrid : MonoBehaviour {
         Vector2 nodeZeroPosition = nodes[0, 0].worldPos;
         float dX = position.x - nodeZeroPosition.x;
         float dY = position.y - nodeZeroPosition.y;
-        int x = (int)Mathf.Round(dX / cellSize);
-        int y = (int)Mathf.Round(dY / cellSize);
+        int x = (int) Mathf.Round(dX / CellSize);
+        int y = (int) Mathf.Round(dY / CellSize);
         return new Vector2Int(x, y);
     }
 
     // graphical utilities (debug)
     public void InitTextures()
     {
-        // wall
-        Color color = Color.red;
-        wallTexture = new Texture2D(1, 1);
-        wallTexture.SetPixel(0, 0, color);
-        wallTexture.Apply();
-        // ground
-        color = Color.green;
-        groundTexture = new Texture2D(1, 1);
-        groundTexture.SetPixel(0, 0, color);
-        groundTexture.Apply();
-        //path
-        color = Color.blue;
-        pathTexture = new Texture2D(1, 1);
-        pathTexture.SetPixel(0, 0, color);
-        pathTexture.Apply();
+		if (wallTexture == null)
+		{
+			wallTexture = GenerateBasicTexture (Color.red);
+		}
+        if (groundTexture == null)
+		{
+			groundTexture = GenerateBasicTexture (Color.green);
+		}
     }
 
     public void OnDrawGizmos()
     {
-        // Draw obstacles
         if (nodes != null)
         {
             foreach (Node node in nodes)
             {
-                //if (node != null && node.worldPos.x == 1.5 && node.worldPos.y == 0.5)
                 if (node != null)
                 {
                     Texture2D texture = node.isWall ? wallTexture : groundTexture;
-                    Gizmos.DrawGUITexture(new Rect(node.worldPos - Vector2.one * cellSize / 2, Vector2.one * cellSize), texture);
+                    Gizmos.DrawGUITexture(new Rect(node.worldPos - Vector2.one * CellSize / 2, Vector2.one * CellSize), texture);
                 }
-
             }
         }
-
-        // Draw path
-        if (path != null)
-        {
-            foreach (Node node in path)
-            {
-                //if (node != null && node.worldPos.x == 1.5 && node.worldPos.y == 0.5)
-                if (node != null)
-                {
-                    Gizmos.DrawGUITexture(new Rect(node.worldPos - Vector2.one * cellSize / 2, Vector2.one * cellSize), pathTexture);
-                }
-
-            }
-        }
-
     }
 
     public Node[,] getNodes()
     {
         return nodes;
     }
-
-
-    public void SetPath(List<Node> path)
-    {
-        this.path = path;
-    }
-
-    
-
 }

@@ -12,14 +12,8 @@ public class Node {
 
     // Cost variables
     private int HCost; // distance from the target Node (manhattan distance)
-    public int FCost { get { return GCost + HCost; } } // sum
-    public int GCost // value of parent node + 10 or 14 (diag or straight)
-    {
-        get
-        {
-            return ComputeGCostFrom(parent);
-        }
-    }
+    public int FCost => GCost + HCost; // sum
+    public int GCost => ComputeGCostFrom(parent);
     
     // Constructeur
     public Node(int gridX, int gridY, Vector2 worldPos)
@@ -56,17 +50,5 @@ public class Node {
             addCost = 14;
         }
         return parent.GCost + addCost;
-    }
-
-    public bool Equals(Node other)
-    {
-        if (other == null)
-        {
-            return false;
-        }
-        else
-        {
-            return gridX == other.gridX && gridY == other.gridY;
-        }
     }
 }

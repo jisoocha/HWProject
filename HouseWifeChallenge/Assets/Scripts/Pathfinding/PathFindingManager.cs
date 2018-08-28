@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using static Utils;
 
+[RequireComponent(typeof(PathFindingGrid))]
 public class PathFindingManager : MonoBehaviour {
 
-    public PathFindingGrid grid;
     public static int limitStepAlgo = 1000;
-    GameObject player;
+    private PathFindingGrid grid;
 
-	void Start () {
-        player = GameObject.Find("Player");
-    }
+	public void Start()
+	{
+		grid = gameObject.GetComponent<PathFindingGrid>();
+	}
 
-    public List<Node> GetPath(Vector2 startPos, Vector2 targetPos)
+    public Queue<Node> GetPathWithAStarAlgo(Vector2 startPos, Vector2 targetPos)
     {
-        List<Node> path = new List<Node>();
         List<Node> openList = new List<Node>();
         List<Node> closeList = new List<Node>();
         
@@ -40,81 +41,85 @@ public class PathFindingManager : MonoBehaviour {
         }
         Node currentNode = startNode;
         int cpt = 0;
-        while (!currentNode.Equals(targetNode))
+        while (currentNode != targetNode)
         {
             openList.Remove(currentNode);
-            if (closeList.Find(n => n.Equals(currentNode)) == null)
-            {
-                closeList.Add(currentNode);
-            }
+			closeList.AddUnique(currentNode);
+         
             // Ajout des noeuds voisins dans l'open list s'ils n'existent pas
             List<Node> neighbours = grid.GetNeighbours(currentNode);
             foreach (Node node in neighbours)
             {   
-                if (closeList.Find(n => n.Equals(node)) != null)
+                if (!closeList.Contains(node))
                 {
-                    continue; // we skip nodes in the close list
+                    // We change the parent node if it is a shorter way to access
+					if (node.parent == null || node.GCost > node.ComputeGCostFrom(currentNode))
+					{
+						node.parent = currentNode;
+					}
+					openList.AddUnique(node);
                 }
-                // We change the parent node if it is a shorter way to access
-                if (node.parent == null || node.GCost > node.ComputeGCostFrom(currentNode))
-                {
-                    node.parent = currentNode;
-                }
-                if (openList.Find(n => n.Equals(node)) == null)
-                {
-                    openList.Add(node);
-                } 
             }
             // Choose the node with the lower F cost
-            float minCost = float.MaxValue;
-            foreach (Node node in openList)
-            {
-                if (node.Equals(targetNode))
-                {
-                    currentNode = node;
-                    break;
-                }
-                else if (node.FCost < minCost)
-                {
-                    currentNode = node;
-                    minCost = node.FCost;
-                }
-            }
-            // Remove the current Node from openList
+            currentNode = GetBestCandidate (openList, targetNode);
             cpt++;
             if (cpt > limitStepAlgo)
             {
-                Debug.Log("Reached iteration limit");
+                Debug.Log("Reached iteration limit during pathFinding algorithm");
                 return null;
             }
         }
-        // Make the path
         Debug.Log("number of iterations: " + cpt);
-        while (currentNode != startNode)
-        {
-            path.Add(currentNode);
-            currentNode = currentNode.parent;
-        }
-        path.Reverse();
+        Queue<Node> path = GetPathFromNode(currentNode);
+        Debug.Log("New Path: " + string.Join(",", path.Select(x => x.ToString()).ToArray()));
         return path;
     }
 
-    public void Update()
-    {
-        if (Input.GetMouseButtonDown(0))
-        { 
-            Debug.Log("Pressed primary button.");
-            Vector3 mousePositon = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 targetPos = new Vector2(mousePositon.x, mousePositon.y);
-            Vector2 startPos = new Vector2(player.transform.position.x, player.transform.position.y);
-            List<Node> path = GetPath(startPos, targetPos);
-            Debug.Log("New Path: " + string.Join(",", path.Select(x => x.ToString()).ToArray()));
-            grid.SetPath(path);
-            player.GetComponent<PlayerController>().SetPathToFollow(path);
+	
+	// Get the node in the given list with the lowest F value
+	// If the node is the target node, return it
+	private static Node GetBestCandidate(List<Node> openList, Node targetNode)
+	{
+		Node candidate = null;
+		float minCost = float.MaxValue;
+		foreach (Node node in openList)
+		{
+			if (node == targetNode)
+			{
+                candidate = node;
+				break;
+			}
+			else if (node.FCost < minCost)
+			{
+                candidate = node;
+				minCost = node.FCost;
+			}
+		}
+		return candidate;
+	}
+
+	// Retourne le chemin menant au noeud final
+	// S'arrête lorsque le noeud est null (startPosition)
+	private static Queue<Node> GetPathFromNode(Node node)
+	{
+		Queue<Node> pathFromEnd = new Queue<Node>();
+		while (node != null)
+        {
+            pathFromEnd.Enqueue(node);
+            node = node.parent;
         }
+		return new Queue<Node>(pathFromEnd.Reverse());
+	}
+
+    public Queue<Vector2> GetPathWithWorldPosition(Queue<Node> nodes)
+    {
+        if (nodes == null) return null;
+        Queue<Vector2> worldPositions = new Queue<Vector2>();
+        foreach (Node node in nodes)
+        {
+            worldPositions.Enqueue(node.worldPos);
+        }
+        return worldPositions;
     }
-
-
-
 
 }
