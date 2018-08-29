@@ -18,24 +18,6 @@ public class PathFindingDebug : MonoBehaviour {
 	Texture2D wallTexture;
 	Texture2D groundTexture;
 	Texture2D pathTexture;
-	
-	
-		public static void InitTextures()
-		{
-			if (wallTexture == null)
-			{
-				wallTexture = GenerateBasicTexture (Color.red);
-			}
-			if (groundTexture == null)
-			{
-				groundTexture = GenerateBasicTexture (Color.green);
-			}
-			if (pathTexture == null)
-			{
-				groundTexture = GenerateBasicTexture (Color.green);
-			}
-		}
-	
   
 	public void Start()
 	{
@@ -48,7 +30,7 @@ public class PathFindingDebug : MonoBehaviour {
 	{
 		wallTexture = GenerateBasicTexture (wallColor);
 		groundTexture = GenerateBasicTexture (groundColor);
-		pathtexture = GenerateBasicTexture (pathColor);
+        pathTexture = GenerateBasicTexture (pathColor);
 	}
 	
     public void OnDrawGizmos()
@@ -59,7 +41,7 @@ public class PathFindingDebug : MonoBehaviour {
             {
                 if (node != null)
                 {
-                    Texture2D texture = node.isWall ? TextureContainer.wallTexture : TextureContainer.groundTexture;
+                    Texture2D texture = node.isWall ? wallTexture : groundTexture;
                     Gizmos.DrawGUITexture(new Rect(node.worldPos - Vector2.one * grid.CellSize / 2, Vector2.one * grid.CellSize), texture);
                 }
             }
@@ -71,7 +53,7 @@ public class PathFindingDebug : MonoBehaviour {
             {
                 if (node != null)
                 {
-                    Gizmos.DrawGUITexture(new Rect(node.worldPos - Vector2.one * grid.CellSize / 2, Vector2.one * grid.CellSize), TextureContainer.path);
+                    Gizmos.DrawGUITexture(new Rect(node.worldPos - Vector2.one * grid.CellSize / 2, Vector2.one * grid.CellSize), pathTexture);
                 }
             }
 		}

@@ -32,6 +32,11 @@ public class PathFindingManager : MonoBehaviour {
         // Update H value of all the nodes in the grid
         grid.ResetNodesParent();
         grid.ScanObstacles();
+        if (targetNode.isWall)
+        {
+            return null;
+        }
+
         foreach (Node node in grid.getNodes())
         {
             if (node != null)

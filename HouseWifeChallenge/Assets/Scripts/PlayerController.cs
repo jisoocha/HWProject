@@ -7,7 +7,6 @@ using static Utils;
 public class PlayerController : MonoBehaviour {
 
     public float speed;
-    public Tilemap worldMap;
     private Rigidbody2D rb2d;
     Queue<Vector2> path; // --> change to Queue
 	Vector2 nextPathPosition;
@@ -18,9 +17,7 @@ public class PlayerController : MonoBehaviour {
     void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
-        PathFindingGrid grid = gameObject.AddComponent<PathFindingGrid>();
-        grid.Init(worldMap);
-        pathFindingManager = gameObject.AddComponent<PathFindingManager>();
+        pathFindingManager = GetComponent<PathFindingManager>();
     }
 
 	// Called every frame
@@ -29,6 +26,7 @@ public class PlayerController : MonoBehaviour {
 		playerMove = Vector2.zero; // reset each time
 		
 		// Check Inputs
+
 		if (Input.GetMouseButtonDown(0))
 		{ 
 			Vector3 mousePositon = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -52,11 +50,11 @@ public class PlayerController : MonoBehaviour {
 	public void MoveTo(Vector2 newPosition)
 	{
 		Vector2 startPos = new Vector2(transform.position.x, transform.position.y);
-        Queue<Node> nodePath = pathFindingManager.GetPathWithAStarAlgo(startPos, targetPos);
+        Queue<Node> nodePath = pathFindingManager.GetPathWithAStarAlgo(startPos, newPosition);
         StartFollowingPath (PathFindingManager.ConvertPathToWorldCoord(nodePath));
 	}
 	
-	public void StartFollowingPath(Queue<Node> path)
+	public void StartFollowingPath(Queue<Vector2> path)
 	{
 		this.path = path;
 		isFollowingPath = true;
@@ -81,7 +79,7 @@ public class PlayerController : MonoBehaviour {
 	{
         Vector2 currentPosition = new Vector2(transform.position.x, transform.position.y);
         Vector2 movement = nextPathPosition - currentPosition;
-		if (GetNorm2(movement) < speed * Time.deltaTime)
+		if (GetNorm2(movement) <  2 * speed * Time.deltaTime)
 		{
 			if (path != null && path.Count != 0)
 			{
