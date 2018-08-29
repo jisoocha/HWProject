@@ -9,15 +9,11 @@ using static Utils;
 public class PathFindingGrid : MonoBehaviour {
 
     public Tilemap worldMap; // tileMap defining the word size and grid size
-    int Width => worldMap.size.x;
-    int Height => worldMap.size.y;
-    float CellSize => worldMap.cellSize.x;
+    public int Width => worldMap.size.x;
+    public int Height => worldMap.size.y;
+    public float CellSize => worldMap.cellSize.x;
 	Node[,] nodes;
 	
-	// textures for visual debug
-    static Texture2D wallTexture;
-    static Texture2D groundTexture;
-
     // Use this for initialization
     void Start() {
         Init(worldMap);
@@ -29,9 +25,6 @@ public class PathFindingGrid : MonoBehaviour {
         this.worldMap.CompressBounds();
         Debug.Log(string.Format("Grid Initialized. Properties: width:{0}, height:{1}, cellsize: {2}", Width, Height, CellSize));
         InitNodes();
-        InitTextures();
-		// not necessary at First
-		//ScanObstacles();
 	}
 	
     public void InitNodes()
@@ -174,34 +167,6 @@ public class PathFindingGrid : MonoBehaviour {
         int x = (int) Mathf.Round(dX / CellSize);
         int y = (int) Mathf.Round(dY / CellSize);
         return new Vector2Int(x, y);
-    }
-
-    // graphical utilities (debug)
-    public void InitTextures()
-    {
-		if (wallTexture == null)
-		{
-			wallTexture = GenerateBasicTexture (Color.red);
-		}
-        if (groundTexture == null)
-		{
-			groundTexture = GenerateBasicTexture (Color.green);
-		}
-    }
-
-    public void OnDrawGizmos()
-    {
-        if (nodes != null)
-        {
-            foreach (Node node in nodes)
-            {
-                if (node != null)
-                {
-                    Texture2D texture = node.isWall ? wallTexture : groundTexture;
-                    Gizmos.DrawGUITexture(new Rect(node.worldPos - Vector2.one * CellSize / 2, Vector2.one * CellSize), texture);
-                }
-            }
-        }
     }
 
     public Node[,] getNodes()

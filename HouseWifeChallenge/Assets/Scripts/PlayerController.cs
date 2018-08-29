@@ -23,7 +23,6 @@ public class PlayerController : MonoBehaviour {
         pathFindingManager = gameObject.AddComponent<PathFindingManager>();
     }
 
-
 	// Called every frame
     private void Update() 
     {
@@ -34,10 +33,7 @@ public class PlayerController : MonoBehaviour {
 		{ 
 			Vector3 mousePositon = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 			Vector2 targetPos = new Vector2(mousePositon.x, mousePositon.y);
-			Vector2 startPos = new Vector2(transform.position.x, transform.position.y);
-            Queue<Node> nodePath = pathFindingManager.GetPathWithAStarAlgo(startPos, targetPos);
-            path = pathFindingManager.GetPathWithWorldPosition(nodePath);
-            StartFollowingPath();
+			MoveTo(targetPos);
 		}
 		
 		// A simplifier
@@ -53,11 +49,19 @@ public class PlayerController : MonoBehaviour {
         rb2d.velocity = playerMove.normalized * speed;
     }
 	
-	public void StartFollowingPath()
+	public void MoveTo(Vector2 newPosition)
 	{
+		Vector2 startPos = new Vector2(transform.position.x, transform.position.y);
+        Queue<Node> nodePath = pathFindingManager.GetPathWithAStarAlgo(startPos, targetPos);
+        StartFollowingPath (PathFindingManager.ConvertPathToWorldCoord(nodePath));
+	}
+	
+	public void StartFollowingPath(Queue<Node> path)
+	{
+		this.path = path;
+		isFollowingPath = true;
 		if (path != null && path.Count > 0)
 		{
-			isFollowingPath = true;
 			nextPathPosition = path.Dequeue();
 		}
 		else 

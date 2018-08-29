@@ -9,7 +9,7 @@ public class PathFindingManager : MonoBehaviour {
 
     public static int limitStepAlgo = 1000;
     private PathFindingGrid grid;
-
+	private Queue<Node> currentPath;
 	public void Start()
 	{
 		grid = gameObject.GetComponent<PathFindingGrid>();
@@ -71,7 +71,7 @@ public class PathFindingManager : MonoBehaviour {
         }
         Debug.Log("number of iterations: " + cpt);
         Queue<Node> path = GetPathFromNode(currentNode);
-        Debug.Log("New Path: " + string.Join(",", path.Select(x => x.ToString()).ToArray()));
+		currentPath = path;
         return path;
     }
 
@@ -111,7 +111,7 @@ public class PathFindingManager : MonoBehaviour {
 		return new Queue<Node>(pathFromEnd.Reverse());
 	}
 
-    public Queue<Vector2> GetPathWithWorldPosition(Queue<Node> nodes)
+    public static Queue<Vector2> ConvertPathToWorldCoord(Queue<Node> nodes)
     {
         if (nodes == null) return null;
         Queue<Vector2> worldPositions = new Queue<Vector2>();
@@ -121,5 +121,10 @@ public class PathFindingManager : MonoBehaviour {
         }
         return worldPositions;
     }
-
+	
+	public Queue<Node> getCurrentPath()
+	{
+		return currentPath;
+	}
+	
 }
