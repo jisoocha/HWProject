@@ -17,7 +17,7 @@ public class PlayerController : MonoBehaviour {
     void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
-        pathFindingManager = GetComponent<PathFindingManager>();
+        pathFindingManager = GetComponent<PathFindingManager>(); 
     }
 
 	// Called every frame
@@ -27,7 +27,7 @@ public class PlayerController : MonoBehaviour {
 		
 		// Check Inputs
 
-		if (Input.GetMouseButtonDown(0))
+		if (Input.GetMouseButtonDown(1))
 		{ 
 			Vector3 mousePositon = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 			Vector2 targetPos = new Vector2(mousePositon.x, mousePositon.y);
